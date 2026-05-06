@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RFF707 Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+        .admin-header { background: linear-gradient(135deg, #1a1a2a, #0a0a0f); border-bottom: 2px solid #ff3366; padding: 20px 0; margin-bottom: 30px; }
+        .admin-title { font-family: 'Orbitron', monospace; font-size: 28px; color: #ff3366; display: flex; align-items: center; gap: 15px; }
+        .admin-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: #11111a; border-radius: 20px; padding: 20px; border: 1px solid rgba(255,51,102,0.2); text-align: center; }
+        .stat-value { font-size: 36px; font-weight: 800; color: #ff3366; }
+        .admin-table { background: #11111a; border-radius: 20px; overflow: auto; border: 1px solid rgba(255,51,102,0.2); }
+        .admin-table-header, .admin-table-row { display: grid; grid-template-columns: 50px 2fr 2fr 1fr 1fr 100px; padding: 12px 20px; gap: 10px; }
+        .admin-table-header { background: rgba(255,51,102,0.1); font-weight: bold; color: #ff3366; border-bottom: 1px solid rgba(255,51,102,0.2); }
+        .admin-table-row { border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .admin-table-row:hover { background: rgba(255,51,102,0.05); }
+        .user-avatar-small { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+        .login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 100000; display: flex; align-items: center; justify-content: center; }
+        .login-box { background: #11111a; border: 2px solid #ff3366; border-radius: 30px; padding: 50px; text-align: center; width: 350px; }
+        .login-box input { width: 100%; padding: 12px; margin: 15px 0; background: #1a1a2a; border: 1px solid #ff3366; color: white; border-radius: 10px; }
+        .login-box button { background: #ff3366; color: white; border: none; padding: 12px; width: 100%; border-radius: 10px; cursor: pointer; }
+        .tab-buttons { display: flex; gap: 15px; margin-bottom: 25px; }
+        .tab-btn { padding: 10px 25px; background: rgba(255,51,102,0.1); border: 1px solid rgba(255,51,102,0.3); border-radius: 40px; cursor: pointer; }
+        .tab-btn.active { background: #ff3366; color: white; }
+        .admin-logout { background: rgba(255,51,102,0.2); border: 1px solid #ff3366; color: #ff3366; padding: 8px 20px; border-radius: 30px; cursor: pointer; margin-left: auto; }
+        .admin-logout:hover { background: #ff3366; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="login-overlay" id="loginOverlay">
+    <div class="login-box">
+        <div style="font-size: 60px;">👑</div>
+        <h2 style="color: #ff3366;">ADMIN LOGIN</h2>
+        <input type="password" id="adminPassword" placeholder="Password Admin">
+        <button onclick="checkAdminLogin()">LOGIN</button>
+        <p style="margin-top: 15px; font-size: 11px; color: #666;">Password: RFF707_ADMIN_2026</p>
+    </div>
+</div>
+
+<div id="mainContent" style="display: none;">
+    <div class="admin-header">
+        <div class="admin-container">
+            <div class="admin-title">
+                <span>👑</span>
+                <span>RFF707 ADMIN PANEL</span>
+                <button class="admin-logout" onclick="adminLogout()">🚪 Logout</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="admin-container">
+        <div class="tab-buttons">
+            <button class="tab-btn active" onclick="showTab('users')">👥 Users</button>
+            <button class="tab-btn" onclick="showTab('files')">📦 Files</button>
+            <button class="tab-btn" onclick="showTab('banned')">🚫 Banned</button>
+        </div>
+        
+        <div id="usersTab">
+            <div class="admin-stats-grid">
+                <div class="stat-card"><div class="stat-value" id="statTotalUsers">0</div><div>Total Users</div></div>
+                <div class="stat-card"><div class="stat-value" id="statTotalFilesAdmin">0</div><div>Total Files</div></div>
+            </div>
+            <div class="admin-table">
+                <div class="admin-table-header"><span>#</span><span>User</span><span>Email</span><span>Nama</span><span>Login</span><span>Aksi</span></div>
+                <div id="usersListContainer"></div>
+            </div>
+        </div>
+        
+        <div id="filesTab" style="display: none;">
+            <div class="admin-table">
+                <div class="admin-table-header"><span>#</span><span>Nama File</span><span>Tipe</span><span>Ukuran</span><span>Upload</span><span>Aksi</span></div>
+                <div id="filesListContainer"></div>
+            </div>
+        </div>
+        
+        <div id="bannedTab" style="display: none;">
+            <div id="banListContainer" style="background:#11111a; border-radius:20px; padding:20px;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const ADMIN_PASSWORD = "RFF707_ADMIN_2026";
+let allUsers = [], allFiles = [];
+
+function checkAdminLogin() {
+    if(document.getElementById('adminPassword').value === ADMIN_PASSWORD) {
+        localStorage.setItem('rff707_admin_logged_in', 'true');
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        loadData();
+    } else { alert('Password salah!'); }
+}
+
+function adminLogout() { localStorage.removeItem('rff707_admin_logged_in'); location.reload(); }
+function showTab(tab) {
+    document.getElementById('usersTab').style.display = tab === 'users' ? 'block' : 'none';
+    document.getElementById('filesTab').style.display = tab === 'files' ? 'block' : 'none';
+    document.getElementById('bannedTab').style.display = tab === 'banned' ? 'block' : 'none';
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+}
+
+function formatSize(b) { if(b===0) return '0 B'; const k=1024, s=['B','KB','MB','GB']; const i=Math.floor(Math.log(b)/Math.log(k)); return parseFloat((b/Math.pow(k,i)).toFixed(2))+' '+s[i]; }
+
+function loadData() {
+    allUsers = JSON.parse(localStorage.getItem('rff707_all_users') || '[]');
+    document.getElementById('statTotalUsers').textContent = allUsers.length;
+    document.getElementById('usersListContainer').innerHTML = allUsers.map((u,i) => `
+        <div class="admin-table-row">
+            <span>${i+1}</span>
+            <span><img src="${u.picture}" class="user-avatar-small" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=ff3366&color=fff'"></span>
+            <span>${u.email}</span>
+            <span>${u.name}</span>
+            <span>${u.loginCount || 1}x</span>
+            <span><button onclick="deleteUser('${u.id}')" style="background:#ff3366; border:none; color:white; padding:5px 15px; border-radius:20px; cursor:pointer;">🗑️</button></span>
+        </div>
+    `).join('');
+    
+    const request = indexedDB.open('RFF707_Storage_Guest', 2);
+    request.onsuccess = (e) => {
+        const db = e.target.result;
+        const tx = db.transaction(['files'], 'readonly');
+        tx.objectStore('files').getAll().onsuccess = (ev) => {
+            allFiles = ev.target.result || [];
+            document.getElementById('statTotalFilesAdmin').textContent = allFiles.length;
+            document.getElementById('filesListContainer').innerHTML = allFiles.map((f,i) => `
+                <div class="admin-table-row">
+                    <span>${i+1}</span>
+                    <span>${f.name.length>30?f.name.substring(0,27)+'...':f.name}</span>
+                    <span>${f.type}</span>
+                    <span>${formatSize(f.size)}</span>
+                    <span>${new Date(f.uploadedAt).toLocaleDateString()}</span>
+                    <span><button onclick="deleteFile('${f.id}')" style="background:#ff3366; border:none; color:white; padding:5px 15px; border-radius:20px; cursor:pointer;">🗑️</button></span>
+                </div>
+            `).join('');
+        };
+    };
+    
+    const banEnd = localStorage.getItem('rff707_cloud_ban_end');
+    const container = document.getElementById('banListContainer');
+    if(banEnd && parseInt(banEnd) > Date.now()) {
+        const remaining = parseInt(banEnd) - Date.now();
+        const minutes = Math.floor(remaining / 60000);
+        container.innerHTML = `<div style="text-align:center; padding:20px;">🚫 User banned for ${minutes} more minutes<br><button onclick="unbanUser()" style="background:#00ff88; border:none; padding:10px 20px; border-radius:20px; margin-top:15px; cursor:pointer;">Unban Now</button></div>`;
+    } else { container.innerHTML = '<p style="text-align:center; padding:20px;">✅ No banned users</p>'; }
+}
+
+function deleteUser(id) {
+    let users = JSON.parse(localStorage.getItem('rff707_all_users') || '[]');
+    users = users.filter(u => u.id !== id);
+    localStorage.setItem('rff707_all_users', JSON.stringify(users));
+    loadData();
+}
+
+function deleteFile(id) {
+    const request = indexedDB.open('RFF707_Storage_Guest', 2);
+    request.onsuccess = (e) => {
+        const db = e.target.result;
+        const tx = db.transaction(['files'], 'readwrite');
+        tx.objectStore('files').delete(id).onsuccess = () => loadData();
+    };
+}
+
+function unbanUser() { localStorage.removeItem('rff707_cloud_ban_end'); loadData(); }
+
+if(localStorage.getItem('rff707_admin_logged_in') === 'true') {
+    document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    loadData();
+}
+
+window.deleteUser = deleteUser;
+window.deleteFile = deleteFile;
+window.unbanUser = unbanUser;
+window.showTab = showTab;
+window.adminLogout = adminLogout;
+</script>
+</body>
+</html>

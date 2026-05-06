@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>RFF707 Cloud Storage - Ultimate</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+</head>
+<body>
+
+<div class="ban-overlay" id="banOverlay" style="display: none;">
+    <div class="ban-modal">
+        <div class="ban-icon">🚫</div>
+        <h1>ACCESS DENIED</h1>
+        <p>Security violation detected! DevTools telah dibuka.</p>
+        <p><strong id="banTimer">30:00</strong> tersisa</p>
+        <div class="ban-progress"><div class="ban-progress-fill" id="banProgressFill"></div></div>
+    </div>
+</div>
+
+<button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙</button>
+
+<nav class="navbar">
+    <div class="nav-container">
+        <div class="logo">
+            <span class="logo-icon">☁️</span>
+            <span class="logo-text">RFF707 CLOUD STORAGE</span>
+        </div>
+        <div class="nav-right" id="userInfo"></div>
+    </div>
+</nav>
+
+<div class="login-section" id="loginSection">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-icon">🔐</div>
+            <h2>Welcome to RFF707 Cloud Storage</h2>
+            <p>Login dengan akun Google untuk mulai menyimpan file</p>
+            <div id="googleLoginBtn"></div>
+            <p class="login-note">🔒 Aman & Terenkripsi | Anti Inspect Active | Ban 30 Menit</p>
+        </div>
+    </div>
+</div>
+
+<div id="storageContent" style="display: none;">
+    <div class="hero">
+        <h1>📦 Ultimate Cloud Storage</h1>
+        <p>Foto | Video | Dokumen | Semua jenis file</p>
+        <div class="badge-group">
+            <span class="badge">🔒 Encrypted</span>
+            <span class="badge">⏱️ Ban 30 Menit</span>
+            <span class="badge">🔗 Share File</span>
+            <span class="badge">📁 Folder System</span>
+            <span class="badge">📊 Disk Chart</span>
+            <span class="badge">📦 ZIP</span>
+            <span class="badge">🔄 Version</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="upload-card">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📤</div>
+                <h3>Upload File</h3>
+                <p>Klik atau drag & drop file</p>
+                <input type="file" id="fileInput" multiple>
+            </div>
+            <div class="upload-progress" id="uploadProgress">
+                <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+                <div class="progress-text" id="progressText"></div>
+            </div>
+        </div>
+
+        <div class="tools-bar">
+            <button class="tool-btn" onclick="openCreateFolderModal()">📁 New Folder</button>
+            <button class="tool-btn" onclick="openZipModal()">📦 Download ZIP</button>
+            <button class="tool-btn" onclick="openDiskChartModal()">📊 Disk Usage</button>
+        </div>
+
+        <div class="search-container">
+            <div class="search-box">
+                <span>🔍</span>
+                <input type="text" id="searchInput" placeholder="Cari file..." class="search-input">
+                <button id="clearSearchBtn" class="clear-search">✖</button>
+            </div>
+            <div class="search-info" id="searchInfo"></div>
+        </div>
+
+        <div class="breadcrumb" id="breadcrumb">
+            <span class="breadcrumb-item active" onclick="navigateToFolder('root')">📁 My Drive</span>
+        </div>
+
+        <div class="category-folders">
+            <div class="category-folder active" data-category="all" onclick="setCategory('all')">
+                <div class="folder-icon">📁</div>
+                <div class="folder-name">Semua</div>
+                <div class="folder-count" id="countAll">0</div>
+            </div>
+            <div class="category-folder" data-category="folder" onclick="setCategory('folder')">
+                <div class="folder-icon">📂</div>
+                <div class="folder-name">Folder</div>
+                <div class="folder-count" id="countFolders">0</div>
+            </div>
+            <div class="category-folder" data-category="image" onclick="setCategory('image')">
+                <div class="folder-icon">🖼️</div>
+                <div class="folder-name">Foto</div>
+                <div class="folder-count" id="countImage">0</div>
+            </div>
+            <div class="category-folder" data-category="video" onclick="setCategory('video')">
+                <div class="folder-icon">🎬</div>
+                <div class="folder-name">Video</div>
+                <div class="folder-count" id="countVideo">0</div>
+            </div>
+            <div class="category-folder" data-category="audio" onclick="setCategory('audio')">
+                <div class="folder-icon">🎵</div>
+                <div class="folder-name">Audio</div>
+                <div class="folder-count" id="countAudio">0</div>
+            </div>
+            <div class="category-folder" data-category="document" onclick="setCategory('document')">
+                <div class="folder-icon">📄</div>
+                <div class="folder-name">Dokumen</div>
+                <div class="folder-count" id="countDocument">0</div>
+            </div>
+        </div>
+
+        <div class="server-status-card">
+            <div class="server-status-left">
+                <div class="server-icon">🖥️</div>
+                <div class="server-info">
+                    <h4>RFF707 Cloud <span style="color:#00ff88;">● Online</span></h4>
+                    <div class="server-ping" id="pingText">Latency: 24ms</div>
+                </div>
+            </div>
+            <div><button class="sync-btn" id="syncBtn">🔄 Sync</button></div>
+        </div>
+
+        <div class="storage-info-bar">
+            <span>💾 Storage Info</span>
+            <span id="storageInfo">Loading...</span>
+        </div>
+
+        <div class="current-location">
+            <span>📍</span>
+            <span id="currentLocationName">My Drive</span>
+        </div>
+
+        <div class="file-grid" id="fileGrid">
+            <div class="loader">📭 Loading...</div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Create Folder -->
+<div class="modal" id="createFolderModal">
+    <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-header"><h3>📁 New Folder</h3><button class="close-modal" onclick="closeCreateFolderModal()">✖</button></div>
+        <div class="modal-body">
+            <input type="text" id="newFolderName" placeholder="Folder name" style="width:100%; padding:10px; border-radius:8px; background:#1a1a2a; border:1px solid #ff3366; color:white;">
+            <button onclick="createFolder()" style="width:100%; margin-top:15px; background:#ff3366; color:white; padding:10px; border:none; border-radius:8px; cursor:pointer;">Create</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal ZIP -->
+<div class="modal" id="zipModal">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header"><h3>📦 Download ZIP</h3><button class="close-modal" onclick="closeZipModal()">✖</button></div>
+        <div class="modal-body">
+            <div id="zipFileList"></div>
+            <button onclick="downloadAsZip()" style="width:100%; background:#ff3366; color:white; padding:10px; border:none; border-radius:8px; margin-top:15px;">⬇️ Download ZIP</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Disk Chart -->
+<div class="modal" id="diskChartModal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header"><h3>📊 Disk Usage</h3><button class="close-modal" onclick="closeDiskChartModal()">✖</button></div>
+        <div class="modal-body">
+            <canvas id="storageChart" style="max-height: 300px;"></canvas>
+            <div id="chartStats" style="margin-top: 20px;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Share -->
+<div class="modal" id="shareModal">
+    <div class="modal-content" style="max-width: 450px;">
+        <div class="modal-header"><h3>🔗 Share File</h3><button class="close-modal" onclick="closeShareModal()">✖</button></div>
+        <div class="modal-body">
+            <input type="password" id="sharePassword" placeholder="Password (opsional)" style="width:100%; padding:10px; margin-bottom:10px; background:#1a1a2a; border:1px solid #ff3366; border-radius:8px; color:white;">
+            <select id="shareExpiry" style="width:100%; padding:10px; margin-bottom:10px; background:#1a1a2a; border:1px solid #ff3366; border-radius:8px; color:white;">
+                <option value="0">Never expire</option>
+                <option value="3600000">1 hour</option>
+                <option value="86400000">1 day</option>
+                <option value="604800000">1 week</option>
+            </select>
+            <button onclick="generateShareLink()" style="width:100%; background:#ff3366; color:white; padding:10px; border:none; border-radius:8px; cursor:pointer;">🔗 Generate Link</button>
+            <div id="shareLinkContainer" style="display:none; margin-top:15px;">
+                <div style="display:flex; gap:5px;">
+                    <input type="text" id="shareLinkInput" readonly style="flex:1; padding:8px; background:#1a1a2a; border:1px solid #00ff88; border-radius:8px; color:#00ff88; font-size:11px;">
+                    <button onclick="copyShareLink()" style="background:#00ff88; border:none; padding:8px 15px; border-radius:8px; cursor:pointer;">Copy</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Preview -->
+<div class="modal" id="previewModal">
+    <div class="modal-content">
+        <div class="modal-header"><h3 id="previewTitle">Preview</h3><button class="close-modal" onclick="closePreview()">✖</button></div>
+        <div class="modal-body" id="previewBody"></div>
+        <div class="modal-footer">
+            <button class="btn-download" id="downloadBtn">⬇️ Download</button>
+            <button class="btn-rename" id="renameBtn">✏️ Rename</button>
+            <button class="btn-share" id="shareBtn">🔗 Share</button>
+            <button class="btn-delete" id="deleteBtn">🗑️ Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Rename -->
+<div class="modal-rename" id="renameModal">
+    <div class="modal-rename-content">
+        <div class="modal-rename-header"><h3>✏️ Rename</h3><button class="close-rename" onclick="closeRenameModal()">✖</button></div>
+        <div class="modal-rename-body">
+            <input type="text" id="newFileName" class="rename-input" placeholder="Nama baru">
+        </div>
+        <div class="modal-rename-footer">
+            <button class="btn-cancel" onclick="closeRenameModal()">Batal</button>
+            <button class="btn-save-rename" id="saveRenameBtn">Simpan</button>
+        </div>
+    </div>
+</div>
+
+<script src="auth.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
