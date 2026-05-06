@@ -1,6 +1,5 @@
 // ========== GOOGLE AUTH CONFIG ==========
 const AUTH_CONFIG = {
-    // GANTI DENGAN CLIENT ID DARI GOOGLE CLOUD CONSOLE!
     googleClientId: "853304089350-0o21f2n1bfard60e6lakh69gls2dt9r0.apps.googleusercontent.com",
     storageKey: "rff707_current_user",
     usersListKey: "rff707_all_users"
